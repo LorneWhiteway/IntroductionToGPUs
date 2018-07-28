@@ -57,14 +57,65 @@
 \begin{frame}{Motivation}
   \begin{block}{}
     \begin{itemize}
-      \item{This presentation summarises material from the (excellent) course `CUDA Programming on NVIDIA GPUs' by Mike Giles, Oxford.}
+      \item{This presentation summarises material from the (excellent) course `CUDA Programming on NVIDIA GPUs' by Mike Giles, Oxford.}\\~\
       \item{\url{http://people.maths.ox.ac.uk/~gilesm/cuda/}}
     \end{itemize}
   \end{block}
 \end{frame}
 
+\begin{frame}{Two paradigms}
+  \begin{block}{}
+    \begin{itemize}
+      \item{Intel (market cap \$220B\footnotemark): One-chip-fits-all. Use the same chip (a CPU) for all tasks (e.g. both word processing and high-performance computing (HPC)).}\\~\
+      \item{NVIDIA (market cap \$152B\footnotemark[\value{footnote}]): Create a specialised chip (the GPU) specifically tailored for certain tasks (including HPC).}
+    \end{itemize}
+  \end{block}
+  \footnotetext[\value{footnote}]{As of 27 July 2018}
+\end{frame}
 
+\begin{frame}{GPUs}
+  \begin{block}{}
+    \begin{itemize}
+      \item{GPU  = graphics processing unit}
+      \item{Specialised chip}
+      \item{Has many processors and a specialised memory structure}
+      \item{Designed specifically for high performance via parallelisation when doing graphics rendering.}
+      \item{Single instruction, multiple data (SIMD).}
+      \item{This design also makes them suitable for parallelizable problems in HPC.}
+    \end{itemize}
+  \end{block}
+\end{frame}
 
+\begin{frame}{GPUs are displacing CPUs for HPC}
+  \begin{block}{}
+    \begin{itemize}
+      \item{GPUs offer better value (FLOPS/\$) and energy usage (FLOPS/J) than CPUs.}\\~\
+      \item{5 of the world's top 7 supercomputers use GPUs.\footnotemark}\\~\
+      \item{All else being equal, we should probably use GPUs for HPC...}
+    \end{itemize}
+  \end{block}
+\footnotetext[\value{footnote}]{As of June 2018}
+\end{frame}
+
+\begin{frame}{But...}
+  \begin{block}{}
+    \begin{itemize}
+      \item{Installed base of CPUs (e.g. splinter).}\\~\
+      \item{Takes time to develop GPU expertise.}\\~\
+      \item{Program code needs to be altered to run (effectively) on GPUs.}
+    \end{itemize}
+  \end{block}
+\end{frame}
+
+\begin{frame}{GPUs on splinter}
+  \begin{block}{}
+    \begin{itemize}
+      \item{New (July 2018) GPU `Tesla V100' (in addition to old `K80').}\\~\
+      \item{Thanks to Ofer (funding) and Edd (implementation).}\\~\
+      \item{How can we use these cards effectively?}
+    \end{itemize}
+  \end{block}
+\end{frame}
 
 
 \end{document}
