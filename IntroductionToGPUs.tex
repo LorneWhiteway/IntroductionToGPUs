@@ -11,6 +11,8 @@
 \usepackage{tikz} % Diagrams
 \usepackage{color}
 \usepackage{textcomp} % See https://tex.stackexchange.com/questions/145416/how-to-have-straight-single-quotes-in-lstlistings
+\usepackage{multicol}
+\usepackage{caption}
 
 \lstset{language=bash,upquote=true} % Format listings as appropriate for bash. Inexplicably we get problems if the language is set as part of the \begin{lstlisting} command.
 
@@ -24,7 +26,7 @@
 \usecolortheme{beaver}
 
 
-\title{Introduction to Computing with GPUs}
+\title{Introduction to High Performance Computing with GPUs}
 \author{Lorne Whiteway \\ lorne.whiteway@star.ucl.ac.uk}
 \institute{Astrophysics Group \\ Department of Physics and Astronomy \\ University College London}
 \date{August 2018}
@@ -48,8 +50,9 @@
 \begin{frame}{Motivation}
   \begin{block}{}
     \begin{itemize}
-      \item{This presentation summarises material from the (excellent) course `CUDA Programming on NVIDIA GPUs' by Mike Giles, Oxford.}\\~\
-      \item{\url{http://people.maths.ox.ac.uk/~gilesm/cuda/}}
+      \item{Based in part on material from the course \textit{CUDA Programming on NVIDIA GPUs} by Mike Giles, Oxford.\\~\
+      \url{http://people.maths.ox.ac.uk/~gilesm/cuda/}}\\~\
+      \item{Opinions expressed are my own...}
     \end{itemize}
   \end{block}
 \end{frame}
@@ -70,7 +73,7 @@
       \item{GPU  = graphics processing unit}
       \item{Specialised chip}
       \item{Has many processors and a specialised memory structure}
-      \item{Designed specifically for high performance via parallelisation when doing graphics rendering.}
+      \item{Originally designed specifically for high performance via parallelisation when doing graphics rendering.}
       \item{Single instruction, multiple data (SIMD).}
       \item{This design also makes them suitable for parallelizable problems in HPC.}
       \item{Not-standalone - need a CPU `host'.}
@@ -78,15 +81,23 @@
   \end{block}
 \end{frame}
 
+\begin{frame}{GPU \tiny{Image credit: NVIDIA \url{https://www.nvidia.com/en-us/data-center/tesla-v100/}}}
+  \begin{block}{}
+    \begin{center}
+      \includegraphics[scale=0.83]{V100_photo.png}
+    \end{center}
+  \end{block}
+\end{frame}
+
 \begin{frame}{GPUs are displacing CPUs for HPC}
   \begin{block}{}
     \begin{itemize}
       \item{GPUs offer better value (FLOPS/\$) and energy usage (FLOPS/J) than CPUs.}\\~\
-      \item{5 of the world's top 7 supercomputers use GPUs.\footnotemark}\\~\
+      \item{5 of the world's top 7 supercomputers use GPUs, including the top supercomputer (\textit{Summit}, Oak Ridge National Lab, 122.3 PFLOPS).\footnotemark}\\~\
       \item{All else being equal, we should probably use GPUs for HPC...}
     \end{itemize}
   \end{block}
-\footnotetext[\value{footnote}]{As of June 2018}
+\footnotetext[\value{footnote}]{TOP500 list, June 2018 \url{https://www.top500.org/lists/2018/06/}}
 \end{frame}
 
 \begin{frame}{But...}
@@ -107,9 +118,19 @@
       \item{How can we use these cards effectively?}
     \end{itemize}
   \end{block}
+    
+  
+  \begin{figure}
+  \begin{multicols}{2}
+  \centering
+  \includegraphics[width=0.18\textwidth]{Ofer_Lahav_photo_2014_SB_STFC.jpg}\\
+  \includegraphics[width=0.13\textwidth]{Edward_Edmonson_2016_w.jpg}\\
+  \end{multicols}
+  \end{figure}
+
 \end{frame}
 
-\begin{frame}{Tesla V100 specifications} {\tiny \url{http://www.nvidia.com/content/PDF/Volta-Datasheet.pdf}}
+\begin{frame}{Tesla V100 specifications} {\tiny Image credit: NVIDIA \url{http://www.nvidia.com/content/PDF/Volta-Datasheet.pdf}}
   \begin{block}{}
     \begin{center}
       \includegraphics[scale=0.90]{V100_specsheet_A.png}
@@ -117,7 +138,7 @@
   \end{block}
 \end{frame}
 
-\begin{frame}{Tesla V100 specifications} {\tiny \url{http://www.nvidia.com/content/PDF/Volta-Datasheet.pdf}}
+\begin{frame}{Tesla V100 specifications} {\tiny Image credit: NVIDIA \url{http://www.nvidia.com/content/PDF/Volta-Datasheet.pdf}}
   \begin{block}{}
     \begin{center}
       \includegraphics[scale=0.83]{V100_specsheet_B.png}
@@ -264,7 +285,7 @@
       \item{There are functions to implement syncorisation (across threads in a block, or across all blocks).}
       \item{Can set up some shared memory for all the threads in a block.}
       \item{There are some \textit{atomic} functions e.g. for modifying a global variable; your thread will briefly get a lock on the global variable.}
-      \texttt{Very fast functions to allow threads in a warp to exchange information.}
+      \item{Very fast functions to allow threads in a warp to exchange information (warp shuffles).}
     \end{itemize}
   \end{block}
 \end{frame}
@@ -272,12 +293,24 @@
 \begin{frame}{Cache lines}
   \begin{block}{}
     \begin{itemize}
-      \item{Data is read in a \textit{cache line} of 64 bytes (8 doubles) - if you ask for only one double, you will still get 8. Only a few cache lines can be held in fast memory at a time.}
-      \item{You will be used to this when programming CPUs. For example, it makes sense to process an array sequentially, so as not to `churn' the cache lines.}
+      \item{Data is read in a \textit{cache line} of 64 bytes (8 doubles) - if you ask for only one double, you will still get 8. Only a few cache lines can be held in fast memory at a time.}\\~\
+      \item{You should already be taking this into account when programming CPUs. For example, it makes sense to process an array sequentially, so as not to `churn' the cache lines.}\\~\
       \item{Still an issue with GPUs, but here you need sensible interaction with the cache lines across \textit{all} the threads in a warp.}
     \end{itemize}
   \end{block}
 \end{frame}
 
+\begin{frame}{Parallel algorithms - summation}
+  \begin{block}{}
+    \begin{itemize}
+      \item{Summing N numbers can be done in $\log_2(N)$ (parallel) steps.\\~\
+      In the first step, nodes 0 and 1 exchange data (so then each knows $x_0 + x_1$); simultaneously 2 and 3 exchange, 4 and 5 exchange, etc.\\~\
+      In the second step, nodes 0 and 2 exchange subtotals (so then each knows $x_0 + x_1 + x_2 + x_3$, etc.;\\~\
+      Etc.}\\~\
+      \item{Warp shuffles make this easy and fast (at least for the first five steps).}\\~\
+      \item{Similar logic used for the Fast Fourier Transform (FFT).}
+    \end{itemize}
+  \end{block}
+\end{frame}
 
 \end{document}
